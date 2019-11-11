@@ -91,11 +91,11 @@ class ItemTouchHelperCallback(private val mAdapter: SlimAdapter) : ItemTouchHelp
         super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y)
         if (fromPos < toPos) {
             for (i in fromPos until toPos) {
-                Collections.swap(mAdapter.getDataList<Any>(), i, i + 1)
+                Collections.swap(mAdapter.getDataList(), i, i + 1)
             }
         } else {
             for (i in fromPos downTo toPos + 1) {
-                Collections.swap(mAdapter.getDataList<Any>(), i, i - 1)
+                Collections.swap(mAdapter.getDataList(), i, i - 1)
             }
         }
         mAdapter.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
@@ -111,7 +111,7 @@ class ItemTouchHelperCallback(private val mAdapter: SlimAdapter) : ItemTouchHelp
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         if (isBodyViewHolder(viewHolder)) {
             val pos = getViewHolderPosition(viewHolder)
-            mAdapter.getDataList<Any>().toArrayList().removeAt(pos)
+            mAdapter.getDataList().removeAt(pos)
             mAdapter.notifyItemRemoved(viewHolder.adapterPosition)
             swipeListener?.onItemSwiped(viewHolder, pos)
         }
@@ -244,9 +244,4 @@ class ItemTouchHelperCallback(private val mAdapter: SlimAdapter) : ItemTouchHelp
     private fun getViewHolderPosition(viewHolder: RecyclerView.ViewHolder): Int {
         return viewHolder.adapterPosition - mAdapter.headerViewCount
     }
-
-    private fun <T> List<T>?.toArrayList(): ArrayList<T> {
-        return ArrayList(this.orEmpty())
-    }
-
 }

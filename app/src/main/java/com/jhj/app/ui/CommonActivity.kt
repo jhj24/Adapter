@@ -1,29 +1,28 @@
 package com.jhj.app.ui
 
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
+import com.jhj.app.BaseCommonListActivity
 import com.jhj.app.R
 import com.jhj.slimadapter.SlimAdapter
-import com.jhj.slimadapter.itemdecoration.LineItemDecoration
-import kotlinx.android.synthetic.main.activity_recyclerview.*
+import com.jhj.slimadapter.holder.ViewInjector
 
 /**
  * Created by jhj on 18-10-22.
  */
-class CommonActivity : AppCompatActivity() {
+class CommonActivity : BaseCommonListActivity<Bean>() {
+    override val itemLayoutRes: Int
+        get() = R.layout.list_item_white
 
-    val dataList = arrayListOf<String>("刘德华", "周杰伦", "成龙", "李连杰", "周星驰", "周润华", "吴京", "黄渤", "王宝强", "徐峥")
+    override fun getDataList(): List<Bean> {
+        return listOf(
+            Bean("刘德华"), Bean("周杰伦"), Bean("成龙"), Bean("李连杰"),
+            Bean("周星驰"), Bean("周润华"), Bean("吴京"), Bean("黄渤"),
+            Bean("王宝强"), Bean("徐峥")
+        )
+    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_recyclerview)
-        recyclerView.addItemDecoration(LineItemDecoration())
-        SlimAdapter.creator()
-            .register<String>(R.layout.list_item_white) { injector, bean, position ->
-                injector.text(R.id.textView, bean)
-            }
-            .attachTo(recyclerView)
-            .setDataList(dataList)
+    override fun itemViewConvert(adapter: SlimAdapter, injector: ViewInjector, bean: Bean, position: Int) {
+        injector.text(R.id.textView, bean.name)
     }
 }
+
+data class Bean(val name: String, val id: Int = 0)

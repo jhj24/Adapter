@@ -15,16 +15,11 @@ import android.view.ViewGroup
 
 class SlimViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    val viewInjector: ViewInjector
-    private val viewMap: SparseArray<View>
+    val viewInjector: ViewInjector = ViewInjector(this)
+    private val viewMap: SparseArray<View> = SparseArray()
 
 
-    init {
-        this.viewMap = SparseArray()
-        viewInjector = ViewInjector(this)
-    }
-
-    constructor(parent: ViewGroup, layoutRes: Int) : this(LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)) {}
+    constructor(parent: ViewGroup, layoutRes: Int) : this(LayoutInflater.from(parent.context).inflate(layoutRes, parent, false))
 
     /**
      * 通过viewId获取控件
