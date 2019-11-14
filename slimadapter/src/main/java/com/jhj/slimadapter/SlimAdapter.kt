@@ -114,7 +114,8 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         val list = arrayListOf<T>()
         dataList?.forEach {
             try {
-                list.add(it as T)
+                val bean = it as T
+                list.add(bean)
             } catch (e: ClassCastException) {
                 e.printStackTrace()
             }
@@ -132,7 +133,7 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
 
     fun getRecyclerView(): RecyclerView {
         return recyclerView
-                ?: throw NullPointerException("RecyclerView is null,Please first use attachTo(recyclerView) method")
+            ?: throw NullPointerException("RecyclerView is null,Please first use attachTo(recyclerView) method")
     }
 
 
@@ -211,11 +212,11 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         }
         if (recyclerView?.layoutManager is LinearLayoutManager) {
             view.layoutParams =
-                    if ((recyclerView?.layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                    } else {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    }
+                if ((recyclerView?.layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                } else {
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                }
         }
         headerItemViewList.add(view)
         notifyDataSetChanged()
@@ -251,11 +252,11 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         }
         if (recyclerView?.layoutManager is LinearLayoutManager) {
             view.layoutParams =
-                    if ((recyclerView?.layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                    } else {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    }
+                if ((recyclerView?.layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                } else {
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                }
         }
         footerItemViewList.add(view)
         notifyDataSetChanged()
@@ -442,14 +443,14 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
             isNormalBodyView(viewType) -> { //normal body
                 val dataType = dataViewTypeList[BODY_VIEW_TYPE - viewType]
                 val itemView = itemViewMap[dataType]
-                        ?: throw NullPointerException("missing related layouts corresponding to data types , please add related layout:$dataType")
+                    ?: throw NullPointerException("missing related layouts corresponding to data types , please add related layout:$dataType")
                 val layoutRes = itemView.itemViewLayoutId
                 return SlimViewHolder(parent, layoutRes)
 
             }
             multiViewTypeList.contains(viewType) -> {//multi body
                 val itemView = multiViewMap.get(viewType)
-                        ?: throw NullPointerException("Because you used a multi-style layout to inherit the com.jhj.slimadapter.model.MutilItemTypeModel" + ", But did not find the layout corresponding to the return value of the getItemType() method.")
+                    ?: throw NullPointerException("Because you used a multi-style layout to inherit the com.jhj.slimadapter.model.MutilItemTypeModel" + ", But did not find the layout corresponding to the return value of the getItemType() method.")
                 val layoutRes = itemView.itemViewLayoutId
                 return SlimViewHolder(parent, layoutRes)
 
@@ -458,19 +459,20 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
                 val context = parent.context
                 val density = context.resources.displayMetrics.density
                 val textView = TextView(context)
-                val layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                val layoutParams =
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 textView.setBackgroundColor(0xffff0000.toInt())
                 textView.layoutParams = layoutParams
                 textView.setPadding(
-                        (20 * density).toInt(),
-                        (10 * density).toInt(),
-                        (20 * density).toInt(),
-                        (10 * density).toInt()
+                    (20 * density).toInt(),
+                    (10 * density).toInt(),
+                    (20 * density).toInt(),
+                    (10 * density).toInt()
                 )
                 textView.setTextColor(0xffffffff.toInt())
                 val typeValue = undefineViewList.find { it.value == viewType }
                 textView.text =
-                        "\"${typeValue?.type}\" type layout not found , please call the register(...) method for layout"
+                    "\"${typeValue?.type}\" type layout not found , please call the register(...) method for layout"
                 return SlimViewHolder(textView)
             }
             else -> throw IllegalArgumentException()
@@ -660,7 +662,7 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     private fun setFullSpan(holder: RecyclerView.ViewHolder) {
         if (holder.itemView.layoutParams is StaggeredGridLayoutManager.LayoutParams) {
             val params = holder
-                    .itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
+                .itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
             params.isFullSpan = true
         }
     }
