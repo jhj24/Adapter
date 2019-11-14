@@ -110,17 +110,8 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         return this
     }
 
-    fun <T> getDataList(): List<T> {
-        val list = arrayListOf<T>()
-        dataList?.forEach {
-            try {
-                val bean = it as T
-                list.add(bean)
-            } catch (e: ClassCastException) {
-                e.printStackTrace()
-            }
-        }
-        return list
+    inline fun <reified T> getDataList(): List<T> {
+        return getDataList().filterIsInstance<T>()
     }
 
     fun getDataList(): ArrayList<*> {
@@ -145,7 +136,7 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     fun <D> addDataList(dataList: List<D>): SlimAdapter {
-        val startIndex = getDataList<D>().size + headerViewCount
+        val startIndex = getDataList().size + headerViewCount
         insert(dataList, startIndex)
         return this
     }
@@ -157,7 +148,7 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     fun <D> addData(data: D): SlimAdapter {
-        val startIndex = getDataList<D>().size + headerViewCount
+        val startIndex = getDataList().size + headerViewCount
         insert(arrayListOf(data), startIndex)
         return this
     }
