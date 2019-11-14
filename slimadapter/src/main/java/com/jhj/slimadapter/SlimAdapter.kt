@@ -43,7 +43,6 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     private var dataList: List<*>? = null
     private var recyclerView: RecyclerView? = null
 
-
     private val headerItemViewList = ArrayList<View>()
     private val footerItemViewList = ArrayList<View>()
     private var loadMoreView: LoadMoreView = SimpleLoadMoreView()
@@ -110,22 +109,23 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         return this
     }
 
-    inline fun <reified T> getDataList(): List<T> {
-        return getDataList().filterIsInstance<T>()
+    fun attachTo(recyclerView: RecyclerView): SlimAdapter {
+        recyclerView.adapter = this
+        if (recyclerView.layoutManager == null) {
+            recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
+        }
+        this.recyclerView = recyclerView
+        return this
     }
 
-    fun getDataList(): ArrayList<*> {
-        return ArrayList(dataList.orEmpty())
-    }
+    inline fun <reified T> getDataList(): List<T> = getDataList().filterIsInstance<T>()
 
-    fun isDataListNotEmpty(): Boolean {
-        return dataList.orEmpty().isNotEmpty()
-    }
+    fun getDataList(): ArrayList<*> = ArrayList(dataList.orEmpty())
 
-    fun getRecyclerView(): RecyclerView {
-        return recyclerView
+    fun isDataListNotEmpty(): Boolean = getDataList().isNotEmpty()
+
+    fun getRecyclerView(): RecyclerView = recyclerView
             ?: throw NullPointerException("RecyclerView is null,Please first use attachTo(recyclerView) method")
-    }
 
 
     fun <D> setDataList(dataList: List<D>): SlimAdapter {
@@ -176,15 +176,6 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
 
-    fun attachTo(recyclerView: RecyclerView): SlimAdapter {
-        recyclerView.adapter = this
-        if (recyclerView.layoutManager == null) {
-            recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
-        }
-        this.recyclerView = recyclerView
-        return this
-    }
-
     // ======================================= header ================================
 
     fun addHeader(context: Context, layoutRes: Int, block: (SlimAdapter, View) -> Unit): SlimAdapter {
@@ -198,16 +189,13 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     fun addHeader(view: View): SlimAdapter {
-        if (recyclerView?.layoutManager == null) {
-            throw NullPointerException("layoutManager is null,Please first use attachTo(RecyclerView,LinearLayoutManager) ")
-        }
-        if (recyclerView?.layoutManager is LinearLayoutManager) {
+        if (getRecyclerView().layoutManager is LinearLayoutManager) {
             view.layoutParams =
-                if ((recyclerView?.layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
-                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                } else {
-                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                }
+                    if ((getRecyclerView().layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
+                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    } else {
+                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    }
         }
         headerItemViewList.add(view)
         notifyDataSetChanged()
@@ -238,16 +226,13 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     fun addFooter(view: View): SlimAdapter {
-        if (recyclerView?.layoutManager == null) {
-            throw NullPointerException("layoutManager is null,Please first use attachTo(RecyclerView,LinearLayoutManager) ")
-        }
-        if (recyclerView?.layoutManager is LinearLayoutManager) {
+        if (getRecyclerView().layoutManager is LinearLayoutManager) {
             view.layoutParams =
-                if ((recyclerView?.layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
-                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                } else {
-                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                }
+                    if ((getRecyclerView().layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
+                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    } else {
+                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    }
         }
         footerItemViewList.add(view)
         notifyDataSetChanged()
@@ -434,14 +419,14 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
             isNormalBodyView(viewType) -> { //normal body
                 val dataType = dataViewTypeList[BODY_VIEW_TYPE - viewType]
                 val itemView = itemViewMap[dataType]
-                    ?: throw NullPointerException("missing related layouts corresponding to data types , please add related layout:$dataType")
+                        ?: throw NullPointerException("missing related layouts corresponding to data types , please add related layout:$dataType")
                 val layoutRes = itemView.itemViewLayoutId
                 return SlimViewHolder(parent, layoutRes)
 
             }
             multiViewTypeList.contains(viewType) -> {//multi body
                 val itemView = multiViewMap.get(viewType)
-                    ?: throw NullPointerException("Because you used a multi-style layout to inherit the com.jhj.slimadapter.model.MutilItemTypeModel" + ", But did not find the layout corresponding to the return value of the getItemType() method.")
+                        ?: throw NullPointerException("Because you used a multi-style layout to inherit the com.jhj.slimadapter.model.MutilItemTypeModel" + ", But did not find the layout corresponding to the return value of the getItemType() method.")
                 val layoutRes = itemView.itemViewLayoutId
                 return SlimViewHolder(parent, layoutRes)
 
@@ -451,19 +436,19 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
                 val density = context.resources.displayMetrics.density
                 val textView = TextView(context)
                 val layoutParams =
-                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 textView.setBackgroundColor(0xffff0000.toInt())
                 textView.layoutParams = layoutParams
                 textView.setPadding(
-                    (20 * density).toInt(),
-                    (10 * density).toInt(),
-                    (20 * density).toInt(),
-                    (10 * density).toInt()
+                        (20 * density).toInt(),
+                        (10 * density).toInt(),
+                        (20 * density).toInt(),
+                        (10 * density).toInt()
                 )
                 textView.setTextColor(0xffffffff.toInt())
                 val typeValue = undefineViewList.find { it.value == viewType }
                 textView.text =
-                    "\"${typeValue?.type}\" type layout not found , please call the register(...) method for layout"
+                        "\"${typeValue?.type}\" type layout not found , please call the register(...) method for layout"
                 return SlimViewHolder(textView)
             }
             else -> throw IllegalArgumentException()
@@ -594,29 +579,17 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     //========= ViewType判断 ========
-    fun isHeaderView(viewType: Int): Boolean {
-        return viewType in (FOOTER_VIEW_TYPE + 1)..HEADER_VIEW_TYPE
-    }
+    fun isHeaderView(viewType: Int): Boolean = viewType in (FOOTER_VIEW_TYPE + 1)..HEADER_VIEW_TYPE
 
-    fun isFooterView(viewType: Int): Boolean {
-        return viewType in (MORE_VIEW_TYPE + 1)..FOOTER_VIEW_TYPE
-    }
+    fun isFooterView(viewType: Int): Boolean = viewType in (MORE_VIEW_TYPE + 1)..FOOTER_VIEW_TYPE
 
-    fun isLoadMoreView(viewType: Int): Boolean {
-        return viewType == MORE_VIEW_TYPE
-    }
+    fun isLoadMoreView(viewType: Int): Boolean = viewType == MORE_VIEW_TYPE
 
-    fun isEmptyView(viewType: Int): Boolean {
-        return viewType == EMPTY_VIEW_TYPE
-    }
+    fun isEmptyView(viewType: Int): Boolean = viewType == EMPTY_VIEW_TYPE
 
-    fun isNormalBodyView(viewType: Int): Boolean {
-        return viewType in (BODY_VIEW_UNDEFINE + 1)..BODY_VIEW_TYPE
-    }
+    fun isNormalBodyView(viewType: Int): Boolean = viewType in (BODY_VIEW_UNDEFINE + 1)..BODY_VIEW_TYPE
 
-    fun isUndefineBodyView(viewType: Int): Boolean {
-        return viewType <= BODY_VIEW_UNDEFINE
-    }
+    fun isUndefineBodyView(viewType: Int): Boolean = viewType <= BODY_VIEW_UNDEFINE
 
     //====== 其他 =======
 
@@ -629,14 +602,9 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
 
         loadMoreView.loadMoreStatus = LoadMoreView.STATUS_LOADING
 
-        if (recyclerView != null) {
-            getRecyclerView().post {
-                blockLoadMore?.invoke(this@SlimAdapter)
-            }
-        } else {
+        getRecyclerView().post {
             blockLoadMore?.invoke(this@SlimAdapter)
         }
-
     }
 
 
@@ -653,7 +621,7 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     private fun setFullSpan(holder: RecyclerView.ViewHolder) {
         if (holder.itemView.layoutParams is StaggeredGridLayoutManager.LayoutParams) {
             val params = holder
-                .itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
+                    .itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
             params.isFullSpan = true
         }
     }
