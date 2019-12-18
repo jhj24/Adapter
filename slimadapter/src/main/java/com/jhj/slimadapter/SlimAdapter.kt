@@ -17,6 +17,7 @@ import android.widget.TextView
 import com.jhj.slimadapter.holder.SlimViewHolder
 import com.jhj.slimadapter.holder.ViewInjector
 import com.jhj.slimadapter.model.MultiItemTypeModel
+import com.jhj.slimadapter.model.TreeItemTypeModel
 import com.jhj.slimadapter.more.LoadMoreView
 import com.jhj.slimadapter.more.SimpleLoadMoreView
 import com.jhj.slimadapter.swipe.ItemTouchHelperCallback
@@ -39,6 +40,8 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     private val itemViewMap = HashMap<Type, ItemViewDelegate<*>>()
     private val multiViewMap = SparseArray<ItemViewDelegate<*>>()
     private val undefineViewList = arrayListOf<TypeValue>()
+
+    private val treeViewMap = SparseArray<ItemViewDelegate<*>>()
 
     private var dataList: List<*>? = null
     private var recyclerView: RecyclerView? = null
@@ -109,6 +112,79 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         return this
     }
 
+    fun <T : TreeItemTypeModel<T>> registerTree(@LayoutRes rootLayoutRes: Int, @LayoutRes layoutRes: Int, bind: SlimAdapter.(injector: ViewInjector, bean: T, position: Int) -> Unit): SlimAdapter {
+        treeViewMap.put(BODY_VIEW_ROOT, object : ItemViewDelegate<T> {
+
+            override val itemViewLayoutId: Int
+                get() = rootLayoutRes
+
+            override fun injector(injector: ViewInjector, data: T, position: Int) {
+                this@SlimAdapter.bind(injector, data, position)
+            }
+        })
+        treeViewMap.put(BODY_VIEW_NODE, object : ItemViewDelegate<T> {
+
+            override val itemViewLayoutId: Int
+                get() = layoutRes
+
+            override fun injector(injector: ViewInjector, data: T, position: Int) {
+                this@SlimAdapter.bind(injector, data, position)
+            }
+        })
+        return this
+    }
+
+    fun <T : TreeItemTypeModel<T>> itemClickResponse(bean: T, itemClose: SlimAdapter.() -> Unit = {}, itemExpend: SlimAdapter.() -> Unit = {}, itemNode: SlimAdapter.() -> Unit = {}) {
+        if (bean.isRoot) {
+            if (bean.isChildrenDisplay) {
+                rootItemClose(bean)
+                this.itemClose()
+            } else {
+                rootItemExpend(bean)
+                this.itemExpend()
+            }
+            bean.isChildrenDisplay = !bean.isChildrenDisplay
+        } else {
+            this.itemNode()
+        }
+    }
+
+
+    fun <T : TreeItemTypeModel<T>> rootItemExpend(bean: T) {
+        val position = dataList?.indexOf(bean)
+        if (position != null && position != -1) {
+            for (data in bean.getChildren().orEmpty()) {
+                data.itemLevels = bean.itemLevels + 1
+            }
+            insert(bean.getChildren().orEmpty(), position + 1)
+        }
+    }
+
+    fun <T : TreeItemTypeModel<T>> rootItemClose(bean: T) {
+        val position = dataList?.indexOf(bean)
+        if (position != null && position != -1) {
+            val children: MutableList<T> = mutableListOf()
+            getItemAllChildren(bean, children)
+            for (child in children) {
+                val index = dataList.orEmpty().indexOf(child)
+                if (index != -1) {
+                    remove(index)
+                }
+            }
+        }
+    }
+
+    private fun <T : TreeItemTypeModel<T>> getItemAllChildren(bean: T, list: MutableList<T>) {
+        if (bean.getChildren() != null) {
+            list.addAll(bean.getChildren().orEmpty())
+            for (data in bean.getChildren().orEmpty()) {
+                data.isChildrenDisplay = false
+                getItemAllChildren(data, list)
+            }
+        }
+    }
+
+
     fun attachTo(recyclerView: RecyclerView): SlimAdapter {
         recyclerView.adapter = this
         if (recyclerView.layoutManager == null) {
@@ -178,7 +254,11 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
 
     // ======================================= header ================================
 
-    fun addHeader(context: Context, layoutRes: Int, block: (SlimAdapter, View) -> Unit): SlimAdapter {
+    fun addHeader(
+            context: Context,
+            layoutRes: Int,
+            block: (SlimAdapter, View) -> Unit
+    ): SlimAdapter {
         val view = LayoutInflater.from(context).inflate(layoutRes, null, false)
         block(this, view)
         return addHeader(view)
@@ -192,9 +272,15 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         if (getRecyclerView().layoutManager is LinearLayoutManager) {
             view.layoutParams =
                     if ((getRecyclerView().layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
                     } else {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                        ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                        )
                     }
         }
         headerItemViewList.add(view)
@@ -214,7 +300,11 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     //====================================== footer ==============================
-    fun addFooter(context: Context, layoutRes: Int, block: (SlimAdapter, View) -> Unit): SlimAdapter {
+    fun addFooter(
+            context: Context,
+            layoutRes: Int,
+            block: (SlimAdapter, View) -> Unit
+    ): SlimAdapter {
         val view = LayoutInflater.from(context).inflate(layoutRes, null, false)
         block(this, view)
         return addFooter(view)
@@ -229,9 +319,15 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         if (getRecyclerView().layoutManager is LinearLayoutManager) {
             view.layoutParams =
                     if ((getRecyclerView().layoutManager as LinearLayoutManager).orientation == LinearLayout.VERTICAL) {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
                     } else {
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                        ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                        )
                     }
         }
         footerItemViewList.add(view)
@@ -295,7 +391,11 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     //==================================empty view ================================
     //设置Empty　View 时，该View只在header 、footer、dataList的大小都是０时显示
 
-    fun setEmptyView(context: Context, layoutRes: Int, block: (SlimAdapter, View) -> Unit): SlimAdapter {
+    fun setEmptyView(
+            context: Context,
+            layoutRes: Int,
+            block: (SlimAdapter, View) -> Unit
+    ): SlimAdapter {
         val view = LayoutInflater.from(context).inflate(layoutRes, null, false)
         block(this, view)
         setEmptyView(view)
@@ -309,7 +409,10 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
     }
 
     fun setEmptyView(emptyView: View): SlimAdapter {
-        val params = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        val params = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        )
         emptyView.layoutParams = params
         emptyItemView = emptyView
         notifyDataSetChanged()
@@ -410,7 +513,8 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
             isFooterView(viewType) -> //footer
                 return SlimViewHolder(footerItemViewList[FOOTER_VIEW_TYPE - viewType])
             isLoadMoreView(viewType) -> {//more
-                val view = LayoutInflater.from(parent.context).inflate(loadMoreView.layoutId, parent, false)
+                val view = LayoutInflater.from(parent.context)
+                        .inflate(loadMoreView.layoutId, parent, false)
                 return SlimViewHolder(view)
 
             }
@@ -431,12 +535,21 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
                 return SlimViewHolder(parent, layoutRes)
 
             }
+            isTreeBodyView(viewType) -> {
+                val itemView = treeViewMap.get(viewType)
+                        ?: throw NullPointerException("please add related layout of tree")
+                val layoutRes = itemView.itemViewLayoutId
+                return SlimViewHolder(parent, layoutRes)
+            }
             isUndefineBodyView(viewType) -> {
                 val context = parent.context
                 val density = context.resources.displayMetrics.density
                 val textView = TextView(context)
                 val layoutParams =
-                        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
                 textView.setBackgroundColor(0xffff0000.toInt())
                 textView.layoutParams = layoutParams
                 textView.setPadding(
@@ -466,6 +579,9 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
                 if (data is MultiItemTypeModel) {
                     val itemView = multiViewMap.get(data.itemType) as ItemViewDelegate<Any>?
                     itemView?.injector(holder.viewInjector, data, position)
+                } else if (data is TreeItemTypeModel<*>) {
+                    val itemView = treeViewMap.get(if (data.isRoot) BODY_VIEW_ROOT else BODY_VIEW_NODE) as ItemViewDelegate<Any>?
+                    itemView?.injector(holder.viewInjector, data, position)
                 } else {
                     val itemView = itemViewMap[data::class.java] as ItemViewDelegate<Any>?
                     itemView?.injector(holder.viewInjector, data, position)
@@ -491,6 +607,9 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
             if (item != null) {
                 if (item is MultiItemTypeModel) { //多样式布局
                     item.itemType
+
+                } else if (item is TreeItemTypeModel<*>) {
+                    if (item.isRoot) BODY_VIEW_ROOT else BODY_VIEW_NODE
 
                 } else {//普通布局
                     val index = dataViewTypeList.indexOf(item::class.java)
@@ -587,9 +706,12 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
 
     fun isEmptyView(viewType: Int): Boolean = viewType == EMPTY_VIEW_TYPE
 
-    fun isNormalBodyView(viewType: Int): Boolean = viewType in (BODY_VIEW_UNDEFINE + 1)..BODY_VIEW_TYPE
+    fun isNormalBodyView(viewType: Int): Boolean =
+            viewType in (BODY_VIEW_UNDEFINE + 1)..BODY_VIEW_TYPE
 
     fun isUndefineBodyView(viewType: Int): Boolean = viewType <= BODY_VIEW_UNDEFINE
+
+    fun isTreeBodyView(viewType: Int): Boolean = viewType == BODY_VIEW_ROOT || viewType == BODY_VIEW_NODE
 
     //====== 其他 =======
 
@@ -635,6 +757,8 @@ class SlimAdapter : RecyclerView.Adapter<SlimViewHolder>() {
         private const val EMPTY_VIEW_TYPE = -0x00400000
         private const val BODY_VIEW_TYPE = -0x00500000
         private const val BODY_VIEW_UNDEFINE = -0x00600000
+        private const val BODY_VIEW_ROOT = 0x00010000
+        private const val BODY_VIEW_NODE = 0x00020000
 
         fun creator(): SlimAdapter {
             return SlimAdapter()

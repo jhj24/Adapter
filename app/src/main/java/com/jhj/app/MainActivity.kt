@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         val list = arrayListOf(
                 "普通布局", "不同数据类型布局", "同数据类型不同显示样式", "带标题和结尾布局",
-                "加载更多", "没有数据的布局", "拖拽和滑动删除", "滑动菜单"
+                "加载更多", "没有数据的布局", "拖拽和滑动删除", "滑动菜单","树型数据"
         )
         recyclerView.addItemDecoration(LineItemDecoration())
         val adapter = SlimAdapter.creator()
@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
                                     5 -> startActivity<EmptyViewActivity>()
                                     6 -> startActivity<DragActivity>()
                                     7 -> startActivity<SwipeMenuActivity>()
+                                    8->startActivity<TreeActivity>()
                                 }
                             }
                 }
